@@ -35,6 +35,25 @@ class Falling_Object(object):
         screen.blit(transformed_image, image_rect)
 
 
+class Player(object):
+    def __init__(self, screen_width, screen_height):
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.image = pygame.image.load('images/cookie_monster.png').convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (screen_width / 2, screen_height - 100)
+        self.score = 0
+        self.top_score = 0
+
+    def update_score(self, falling_item_hit):
+        if falling_item_hit.item_type == 'cookie':
+            self.score += 1
+        else:
+            if self.score > self.top_score:
+                self.top_score = self.score
+            self.score = 0
+            
+
 def main():
     # declare the size of the canvas
     screen_width = 900
@@ -46,15 +65,11 @@ def main():
     pygame.display.set_caption('Cookie Monster')
     pygame.mouse.set_visible(False)
 
-    # set up the player image
-    player_image = pygame.image.load('images/cookie_monster.png').convert_alpha()
-    player_rect = player_image.get_rect()
-    player_rect.topleft = (screen_width / 2, screen_height - 100)
-
     # Set up colors
     blue = (0, 0, 255)
     gray = (128, 128, 128)
 
+    cookie_monster = Player(screen_width, screen_height)
     falling_objects = []
 
     item_drop_rate = 10
@@ -73,7 +88,7 @@ def main():
                     done = True
 
             if event.type == MOUSEMOTION:
-                player_rect.move_ip(event.pos[0] - player_rect.centerx, event.pos[1] - player_rect.centery)
+                cookie_monster.rect.move_ip(event.pos[0] - cookie_monster.rect.centerx, event.pos[1] - cookie_monster.rect.centery)
 
 
         if item_drop_counter == item_drop_rate:
@@ -83,21 +98,25 @@ def main():
                 item_type = 'cookie'
             falling_objects.append(Falling_Object(screen_width, screen_height, item_type))
 
-        for item in falling_objects[:]:
-            item.update_y_position()
-            if item.y_pos > screen_height:
-                falling_objects.remove(item)
+        for falling_object in falling_objects[:]:
+            falling_object.update_y_position()
+            if falling_object.y_pos > screen_height:
+                falling_objects.remove(falling_object)
 
-            if player_rect.colliderect(item.image_rectangle()):
-                falling_objects.remove(item)
+            if cookie_monster.rect.colliderect(falling_object.image_rectangle()):
+                # update score
+                falling_objects.remove(falling_object)
 
 
         screen.fill((gray))
+        
         # Draw the player's rectangle
-        screen.blit(player_image, player_rect)
+        screen.blit(cookie_monster.image, cookie_monster.rect)
+        
         # draw falling objects to screen
         for item in falling_objects:
             item.render_image(screen)
+        
         pygame.display.update()
         game_clock.tick(60)
 
