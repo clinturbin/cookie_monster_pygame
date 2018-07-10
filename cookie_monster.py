@@ -1,13 +1,28 @@
 import pygame, sys, random
 from pygame.locals import *
 
+SCREEN_WIDTH = 900
+SCREEN_HEIGHT = 700
+
+# Set up colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+GRAY = (128, 128, 128)
+
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+game_clock = pygame.time.Clock()
+pygame.display.set_caption('Cookie Monster')
+# pygame.mouse.set_visible(False)
+
+font = pygame.font.Font('freesansbold.ttf', 20)
+
 class Falling_Object(object):
-    def __init__(self, screen_width, screen_height, item_type):
+    def __init__(self, item_type):
         self.size = 30
-        self.screen_width = screen_width
-        self.screen_height = screen_height
         self.item_type = item_type
-        self.x_pos = random.randint(0, self.screen_width - self.size) 
+        self.x_pos = random.randint(0, SCREEN_WIDTH - self.size) 
         self.y_pos = (0 - self.size)
         self.item_drop_speed = random.randint(1, 8)
 
@@ -35,12 +50,10 @@ class Falling_Object(object):
         screen.blit(transformed_image, image_rect)
 
 class Player(object):
-    def __init__(self, screen_width, screen_height):
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+    def __init__(self):
         self.image = pygame.image.load('images/cookie_monster.png').convert_alpha()
         self.rect = self.image.get_rect()
-        self.rect.topleft = (screen_width / 2, screen_height - 100)
+        self.rect.topleft = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)
         self.score = 0
         self.top_score = 0
 
@@ -57,30 +70,46 @@ class Player(object):
         if self.score > self.top_score:
             self.top_score = self.score
         self.score = 0
+    
 
+def quit_game():
+    pygame.quit()
+    sys.exit()    
 
 def add_text(text, font, surface, x, y, color):
     text_obj = font.render(text, 1, color)
     text_rect = text_obj.get_rect()
-    text_rect.topleft = (x, y)
+    text_rect.topright = (x, y)
     surface.blit(text_obj, text_rect)     
 
-def main():
-    pygame.init()
-    screen_width = 900
-    screen_height = 700
-    screen = pygame.display.set_mode((screen_width, screen_height))
-    game_clock = pygame.time.Clock()
-    pygame.display.set_caption('Cookie Monster')
+def load_screen():
+    button = pygame.draw.rect(screen, BLUE, (350, SCREEN_HEIGHT / 2, 100, 50))
+    text_obj = font.render("PLAY!!", 1, WHITE)
+    text_rect = text_obj.get_rect()
+    text_rect.center = button.center
+
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit_game()
+            if event.type == KEYUP:
+                if event.key == K_ESCAPE:
+                    quit_game()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if button.collidepoint(x, y):
+                    done = True
+
+        screen.fill((BLACK))
+        pygame.draw.rect(screen, BLUE, button)
+        screen.blit(text_obj, text_rect)
+        pygame.display.update()
+
+
+def play_game():
     pygame.mouse.set_visible(False)
-
-    # Set up colors
-    blue = (0, 0, 255)
-    gray = (128, 128, 128)
-
-    score_font = pygame.font.Font('freesansbold.ttf', 18)
-
-    cookie_monster = Player(screen_width, screen_height)
+    cookie_monster = Player()
     falling_objects = []
 
     item_drop_rate = 10
@@ -92,11 +121,11 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                done = True
+                quit_game()
 
             if event.type == KEYUP:
                 if event.key == K_ESCAPE:
-                    done = True
+                    quit_game()
 
             if event.type == MOUSEMOTION:
                 cookie_monster.rect.move_ip(event.pos[0] - cookie_monster.rect.centerx, event.pos[1] - cookie_monster.rect.centery)
@@ -107,11 +136,11 @@ def main():
             item_type = 'bomb'
             if random.randint(1, 3) == 1:
                 item_type = 'cookie'
-            falling_objects.append(Falling_Object(screen_width, screen_height, item_type))
+            falling_objects.append(Falling_Object(item_type))
 
         for falling_object in falling_objects[:]:
             falling_object.update_y_position()
-            if falling_object.y_pos > screen_height:
+            if falling_object.y_pos > SCREEN_HEIGHT:
                 falling_objects.remove(falling_object)
 
             if cookie_monster.rect.colliderect(falling_object.image_rectangle()):
@@ -119,7 +148,7 @@ def main():
                 falling_objects.remove(falling_object)
 
 
-        screen.fill((gray))
+        screen.fill((GRAY))
         
         # Draw the player's rectangle
         screen.blit(cookie_monster.image, cookie_monster.rect)
@@ -129,12 +158,15 @@ def main():
             item.render_image(screen)
         
         # Add score and top score to the screen.
-        add_text('Top Score: %s' % (cookie_monster.top_score), score_font, screen, 10, 10, blue)
-        add_text('Score: %s' % (cookie_monster.score), score_font, screen, 10, 60, blue)
+        add_text('Top Score: %s' % (cookie_monster.top_score), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
+        add_text('Score: %s' % (cookie_monster.score), font, screen, SCREEN_WIDTH - 30, 70, BLUE)
 
         pygame.display.update()
         game_clock.tick(60)
 
-    pygame.quit()
-        
+
+def main():
+    load_screen()
+    play_game()
+
 main()
