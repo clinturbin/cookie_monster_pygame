@@ -6,7 +6,7 @@ class Falling_Object(object):
         self.size = 30
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.type = item_type
+        self.item_type = item_type
         self.x_pos = random.randint(0, self.screen_width - self.size) 
         self.y_pos = (0 - self.size)
         self.item_drop_speed = random.randint(1, 8)
@@ -15,15 +15,23 @@ class Falling_Object(object):
         self.y_pos += self.item_drop_speed
 
     def get_image(self):
-        if self.type == 'cookie':
+        if self.item_type == 'cookie':
             return pygame.image.load('images/cookie3.png').convert_alpha()
-        elif self.type == 'bomb':
+        elif self.item_type == 'bomb':
             return pygame.image.load('images/bomb.png').convert_alpha()
+
+    def transform_image_size(self):
+        image = self.get_image()
+        transformed_image = pygame.transform.scale(image, (self.size, self.size))
+        return transformed_image
+
+    def image_rectangle(self):
+        return pygame.Rect(self.x_pos, self.y_pos, self.size, self.size)
 
     def render_image(self, screen):
         image = self.get_image()
-        transformed_image = pygame.transform.scale(image, (self.size, self.size))
-        image_rect = pygame.Rect(self.x_pos, self.y_pos, self.size, self.size)
+        transformed_image = self.transform_image_size()
+        image_rect = self.image_rectangle()
         screen.blit(transformed_image, image_rect)
 
 
@@ -78,6 +86,9 @@ def main():
         for item in falling_objects[:]:
             item.update_y_position()
             if item.y_pos > screen_height:
+                falling_objects.remove(item)
+
+            if player_rect.colliderect(item.image_rectangle()):
                 falling_objects.remove(item)
 
 
