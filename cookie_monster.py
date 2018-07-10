@@ -34,7 +34,6 @@ class Falling_Object(object):
         image_rect = self.image_rectangle()
         screen.blit(transformed_image, image_rect)
 
-
 class Player(object):
     def __init__(self, screen_width, screen_height):
         self.screen_width = screen_width
@@ -47,19 +46,29 @@ class Player(object):
 
     def update_score(self, falling_item_hit):
         if falling_item_hit.item_type == 'cookie':
-            self.score += 1
+            self.increase_score()
         else:
-            if self.score > self.top_score:
-                self.top_score = self.score
-            self.score = 0
-            
+            self.reset_score()
+    
+    def increase_score(self):
+        self.score += 1
+    
+    def reset_score(self):
+        if self.score > self.top_score:
+            self.top_score = self.score
+        self.score = 0
+
+
+def add_text(text, font, surface, x, y, color):
+    text_obj = font.render(text, 1, color)
+    text_rect = text_obj.get_rect()
+    text_rect.topleft = (x, y)
+    surface.blit(text_obj, text_rect)     
 
 def main():
-    # declare the size of the canvas
+    pygame.init()
     screen_width = 900
     screen_height = 700
-    
-    pygame.init()
     screen = pygame.display.set_mode((screen_width, screen_height))
     game_clock = pygame.time.Clock()
     pygame.display.set_caption('Cookie Monster')
@@ -68,6 +77,8 @@ def main():
     # Set up colors
     blue = (0, 0, 255)
     gray = (128, 128, 128)
+
+    score_font = pygame.font.Font('freesansbold.ttf', 18)
 
     cookie_monster = Player(screen_width, screen_height)
     falling_objects = []
@@ -104,7 +115,7 @@ def main():
                 falling_objects.remove(falling_object)
 
             if cookie_monster.rect.colliderect(falling_object.image_rectangle()):
-                # update score
+                cookie_monster.update_score(falling_object)
                 falling_objects.remove(falling_object)
 
 
@@ -117,6 +128,10 @@ def main():
         for item in falling_objects:
             item.render_image(screen)
         
+        # Add score and top score to the screen.
+        add_text('Top Score: %s' % (cookie_monster.top_score), score_font, screen, 10, 10, blue)
+        add_text('Score: %s' % (cookie_monster.score), score_font, screen, 10, 60, blue)
+
         pygame.display.update()
         game_clock.tick(60)
 
