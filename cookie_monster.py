@@ -28,9 +28,23 @@ cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
 font = pygame.font.Font('freesansbold.ttf', 20)
 
 LEVELS = {
-            1:{'cookie_drop_rate': 50, 'min_drop_speed': 1, 'max_drop_speed': 6, 'new_item_load_rate': 10, 'next_level_score': 25},
-            2:{'cookie_drop_rate': 40, 'min_drop_speed': 3, 'max_drop_speed': 12, 'new_item_load_rate': 6, 'next_level_score': 40},
-            3:{'cookie_drop_rate': 30, 'min_drop_speed': 6, 'max_drop_speed': 14, 'new_item_load_rate': 4, 'next_level_score': 50}
+            1:{'cookie_drop_rate': 50,
+               'min_drop_speed': 1,
+               'max_drop_speed': 6,
+               'new_item_load_rate': 10,
+               'next_level_score': 10},
+
+            2:{'cookie_drop_rate': 40,
+               'min_drop_speed': 3,
+               'max_drop_speed': 12,
+               'new_item_load_rate': 6,
+               'next_level_score': 15},
+            
+            3:{'cookie_drop_rate': 30,
+               'min_drop_speed': 6,
+               'max_drop_speed': 14,
+               'new_item_load_rate': 4,
+               'next_level_score': 20}
 }
 
 
@@ -71,33 +85,23 @@ class Player(object):
         self.rect = self.image.get_rect()
         self.rect.topleft = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)
         self.score = 0
-        self.top_score = 0
         self.lives = 5
         self.level = 1
 
     def update_score(self, falling_item_hit):
         self.play_sound_effect(falling_item_hit)
         if falling_item_hit.item_type == 'cookie':
-            self.increase_score()
-            self.update_game_level()
+            self.score += 1
         else:
-            self.reset_score()
+            self.score = 0
             self.decrease_lives()
+        self.update_game_level()
         
     def play_sound_effect(self, falling_item_hit):
         if falling_item_hit.item_type == 'cookie':
-            if random.randint(1, 100) <= 30: # only want cookie sound to play 30% of time
-                eat_cookie_sound.play()
+            eat_cookie_sound.play()
         else:
             bomb_sound.play()
-    
-    def increase_score(self):
-        self.score += 1
-    
-    def reset_score(self):
-        if self.score > self.top_score:
-            self.top_score = self.score
-        self.score = 0
 
     def decrease_lives(self):
         self.lives -= 1
@@ -105,13 +109,14 @@ class Player(object):
             game_over()
 
     def update_game_level(self):
-        if self.level == 1 and self.score >= LEVELS[self.level]['next_level_score']:
+        if self.score >=0 and self.score < LEVELS[1]['next_level_score']:
+            self.level = 1
+        if self.score >= LEVELS[1]['next_level_score'] and self.score < LEVELS[2]['next_level_score']:
             self.level = 2
-        if self.level == 2 and self.score >= LEVELS[self.level]['next_level_score']:
+        if self.score >= LEVELS[2]['next_level_score'] and self.score < LEVELS[3]['next_level_score']:
             self.level = 3
-        if self.level == 3 and self.score == LEVELS[self.level]['next_level_score']:
+        if self.score >= LEVELS[3]['next_level_score']:
             game_over()
-    
 
 def quit_game():
     pygame.quit()
@@ -161,7 +166,6 @@ def load_screen():
         pygame.display.update()
         game_clock.tick(60)
 
-
 def play_game():
     pygame.mixer.music.play(-1, 0.0)
     pygame.mouse.set_visible(False)
@@ -170,6 +174,8 @@ def play_game():
     falling_objects = []
 
     new_item_Load_counter = 0
+
+    level = 1
 
     done = False
     while not done:
@@ -216,7 +222,7 @@ def play_game():
             item.render_image(screen)
         
         # Add score and top score to the screen.
-        add_score_text('Top Score: %s' % (player.top_score), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
+        add_score_text('Level: %s' % (player.level), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
         add_score_text('Score: %s' % (player.score), font, screen, SCREEN_WIDTH - 30, 70, BLUE)
         add_score_text('Lives: %s' % (player.lives), font, screen, SCREEN_WIDTH - 30, 120, BLUE)
 
