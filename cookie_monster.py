@@ -62,13 +62,16 @@ class Player(object):
         self.rect.topleft = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)
         self.score = 0
         self.top_score = 0
+        self.lives = 5
 
     def update_score(self, falling_item_hit):
+        self.play_sound_effect(falling_item_hit)
         if falling_item_hit.item_type == 'cookie':
             self.increase_score()
         else:
             self.reset_score()
-        self.play_sound_effect(falling_item_hit)
+            self.decrease_lives()
+        
 
     def play_sound_effect(self, falling_item_hit):
         if falling_item_hit.item_type == 'cookie':
@@ -85,6 +88,11 @@ class Player(object):
         if self.score > self.top_score:
             self.top_score = self.score
         self.score = 0
+
+    def decrease_lives(self):
+        self.lives -= 1
+        if self.lives == 0:
+            game_over()
     
 
 def quit_game():
@@ -189,10 +197,48 @@ def play_game():
         # Add score and top score to the screen.
         add_text('Top Score: %s' % (cookie_monster.top_score), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
         add_text('Score: %s' % (cookie_monster.score), font, screen, SCREEN_WIDTH - 30, 70, BLUE)
+        add_text('Lives: %s' % (cookie_monster.lives), font, screen, SCREEN_WIDTH - 30, 120, BLUE)
 
         pygame.display.update()
         game_clock.tick(60)
 
+def game_over():
+    pygame.mixer.music.stop()
+    pygame.mouse.set_visible(True)
+    btn_width = 200
+    btn_height = 100
+    play_again_btn = pygame.Rect((SCREEN_WIDTH/4) - (btn_width/2), (SCREEN_HEIGHT/2) - (btn_height/2), btn_width, btn_height)
+    play_again_text_obj = font.render("PLAY AGAIN", 1, WHITE)
+    play_again_text_rect = play_again_text_obj.get_rect()
+    play_again_text_rect.center = play_again_btn.center
+
+    quit_btn = pygame.Rect((SCREEN_WIDTH/4)*3 - (btn_width/2), (SCREEN_HEIGHT/2) - (btn_height/2), btn_width, btn_height)
+    quit_text_obj = font.render("QUIT GAME", 1, WHITE)
+    quit_text_rect = quit_text_obj.get_rect()
+    quit_text_rect.center = quit_btn.center
+
+    
+    done = False
+    while not done:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit_game()
+            if event.type == KEYUP:
+                if event.key == K_ESCAPE:
+                    quit_game()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                x, y = event.pos
+                if play_again_btn.collidepoint(x, y):
+                    play_game()
+                if quit_btn.collidepoint(x, y):
+                    quit_game()
+
+        screen.fill((BLUE))
+        pygame.draw.rect(screen, BLACK, play_again_btn)
+        screen.blit(play_again_text_obj, play_again_text_rect)
+        pygame.draw.rect(screen, BLACK, quit_btn)
+        screen.blit(quit_text_obj, quit_text_rect)
+        pygame.display.update()
 
 def main():
     load_screen()
