@@ -28,19 +28,19 @@ cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
 font = pygame.font.Font('freesansbold.ttf', 20)
 
 LEVELS = {
-            1:{'cookie_drop_rate': 50, 'min_drop_speed': 1, 'max_drop_speed': 8, 'item_drop_rate': 10, 'next_level_score': 25},
-            2:{'cookie_drop_rate': 40, 'min_drop_speed': 2, 'max_drop_speed': 12, 'item_drop_rate': 6, 'next_level_score': 40},
-            3:{'cookie_drop_rate': 30, 'min_drop_speed': 4, 'max_drop_speed': 14, 'item_drop_rate': 4, 'next_level_score': 50}
+            1:{'cookie_drop_rate': 50, 'min_drop_speed': 1, 'max_drop_speed': 6, 'new_item_load_rate': 10, 'next_level_score': 25},
+            2:{'cookie_drop_rate': 40, 'min_drop_speed': 3, 'max_drop_speed': 12, 'new_item_load_rate': 6, 'next_level_score': 40},
+            3:{'cookie_drop_rate': 30, 'min_drop_speed': 6, 'max_drop_speed': 14, 'new_item_load_rate': 4, 'next_level_score': 50}
 }
 
 
 class Falling_Object(object):
-    def __init__(self, item_type):
-        self.size = 30
+    def __init__(self, item_type, item_drop_speed):
         self.item_type = item_type
-        self.x_pos = random.randint(0, SCREEN_WIDTH - self.size) 
+        self.item_drop_speed = item_drop_speed
+        self.size = 30
+        self.x_pos = random.randint(0, SCREEN_WIDTH - self.size)
         self.y_pos = (0 - self.size)
-        self.item_drop_speed = random.randint(1, 8)
 
     def update_y_position(self):
         self.y_pos += self.item_drop_speed
@@ -79,6 +79,7 @@ class Player(object):
         self.play_sound_effect(falling_item_hit)
         if falling_item_hit.item_type == 'cookie':
             self.increase_score()
+            self.update_game_level()
         else:
             self.reset_score()
             self.decrease_lives()
@@ -103,14 +104,13 @@ class Player(object):
         if self.lives == 0:
             game_over()
 
-    def get_game_level(self):
+    def update_game_level(self):
         if self.level == 1 and self.score >= LEVELS[self.level]['next_level_score']:
             self.level = 2
         if self.level == 2 and self.score >= LEVELS[self.level]['next_level_score']:
             self.level = 3
         if self.level == 3 and self.score == LEVELS[self.level]['next_level_score']:
             game_over()
-        return self.level
     
 
 def quit_game():
@@ -169,13 +169,13 @@ def play_game():
     player = Player(cookie_monster_player_img)
     falling_objects = []
 
-    item_drop_counter = 0
+    new_item_Load_counter = 0
 
     done = False
     while not done:
-        current_level = player.get_game_level()   # gets the current level
-        item_drop_rate = LEVELS[current_level]['item_drop_rate']
-        item_drop_counter += 1
+        current_level = player.level
+        new_item_load_rate = LEVELS[current_level]['new_item_load_rate']
+        new_item_Load_counter += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -188,12 +188,13 @@ def play_game():
             if event.type == MOUSEMOTION:
                 player.rect.move_ip(event.pos[0] - player.rect.centerx, event.pos[1] - player.rect.centery)
 
-        if item_drop_counter == item_drop_rate:
-            item_drop_counter = 0
+        if new_item_Load_counter == new_item_load_rate:
+            new_item_Load_counter = 0
+            item_drop_speed = random.randint(LEVELS[current_level]['min_drop_speed'], LEVELS[current_level]['max_drop_speed'])
             item_type = 'bomb'
             if random.randint(1, 100) <= LEVELS[current_level]['cookie_drop_rate']:
                 item_type = 'cookie'
-            falling_objects.append(Falling_Object(item_type))
+            falling_objects.append(Falling_Object(item_type, item_drop_speed))
 
         for falling_object in falling_objects[:]:
             falling_object.update_y_position()
