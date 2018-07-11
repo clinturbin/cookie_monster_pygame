@@ -14,7 +14,13 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 game_clock = pygame.time.Clock()
 pygame.display.set_caption('Cookie Monster')
-# pygame.mouse.set_visible(False)
+
+# Set up sounds
+bomb_sound = pygame.mixer.Sound('images/bomb.wav')
+eat_cookie_sound = pygame.mixer.Sound('images/cookie1.wav')
+start_game_sound = pygame.mixer.Sound('images/cookies.wav')
+hello_sound = pygame.mixer.Sound('images/hello.wav')
+pygame.mixer.music.load('images/c_is_for_cookie_3.wav')
 
 font = pygame.font.Font('freesansbold.ttf', 20)
 
@@ -62,6 +68,15 @@ class Player(object):
             self.increase_score()
         else:
             self.reset_score()
+        self.play_sound_effect(falling_item_hit)
+
+    def play_sound_effect(self, falling_item_hit):
+        if falling_item_hit.item_type == 'cookie':
+            if random.randint(1, 100) < 30: # only want cookie sound to play 30% of time
+                eat_cookie_sound.play()
+        else:
+            bomb_sound.play()
+
     
     def increase_score(self):
         self.score += 1
@@ -83,7 +98,14 @@ def add_text(text, font, surface, x, y, color):
     surface.blit(text_obj, text_rect)     
 
 def load_screen():
-    button = pygame.draw.rect(screen, BLUE, (350, SCREEN_HEIGHT / 2, 100, 50))
+    hello_sound.play()
+
+    start_screen_image = pygame.image.load('images/cm1.png').convert_alpha()
+    start_screen_image_rect = start_screen_image.get_rect()
+    start_screen_image_rect.bottom = (SCREEN_HEIGHT / 10) * 7
+    start_screen_image_rect.centerx = (SCREEN_WIDTH / 2)
+
+    button = pygame.Rect(150, (SCREEN_HEIGHT / 10) * 7, (SCREEN_WIDTH / 10) * 6, 50)
     text_obj = font.render("PLAY!!", 1, WHITE)
     text_rect = text_obj.get_rect()
     text_rect.center = button.center
@@ -99,15 +121,23 @@ def load_screen():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 x, y = event.pos
                 if button.collidepoint(x, y):
+                    start_game_sound.play()
+                    sound_delay_counter = 0
+                    while sound_delay_counter < 120:
+                        sound_delay_counter += 1
+                        game_clock.tick(60)
                     done = True
 
         screen.fill((BLACK))
+        screen.blit(start_screen_image, start_screen_image_rect)
         pygame.draw.rect(screen, BLUE, button)
         screen.blit(text_obj, text_rect)
         pygame.display.update()
+        game_clock.tick(60)
 
 
 def play_game():
+    pygame.mixer.music.play(-1, 0.0)
     pygame.mouse.set_visible(False)
     cookie_monster = Player()
     falling_objects = []
@@ -129,7 +159,6 @@ def play_game():
 
             if event.type == MOUSEMOTION:
                 cookie_monster.rect.move_ip(event.pos[0] - cookie_monster.rect.centerx, event.pos[1] - cookie_monster.rect.centery)
-
 
         if item_drop_counter == item_drop_rate:
             item_drop_counter = 0
