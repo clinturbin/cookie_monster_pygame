@@ -26,6 +26,7 @@ cookie_monster_player_img = pygame.image.load('images/cookie_monster.png').conve
 cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
 
 font = pygame.font.Font('freesansbold.ttf', 20)
+message_font = pygame.font.Font('freesansbold.ttf', 40)
 
 LEVELS = {
             1:{'cookie_drop_rate': 50,
@@ -106,7 +107,7 @@ class Player(object):
     def decrease_lives(self):
         self.lives -= 1
         if self.lives == 0:
-            game_over()
+            game_over("GAME OVER")
 
     def update_game_level(self):
         if self.score >=0 and self.score < LEVELS[1]['next_level_score']:
@@ -116,7 +117,7 @@ class Player(object):
         if self.score >= LEVELS[2]['next_level_score'] and self.score < LEVELS[3]['next_level_score']:
             self.level = 3
         if self.score >= LEVELS[3]['next_level_score']:
-            game_over()
+            game_over("YOU WIN!!!")
 
 def quit_game():
     pygame.quit()
@@ -229,9 +230,14 @@ def play_game():
         pygame.display.update()
         game_clock.tick(60)
 
-def game_over():
+def game_over(message):
     pygame.mixer.music.stop()
     pygame.mouse.set_visible(True)
+
+    game_over_message = message_font.render(message, 1, WHITE)
+    game_over_message_rect = game_over_message.get_rect()
+    game_over_message_rect.centerx = SCREEN_WIDTH / 2
+    game_over_message_rect.top = 100
 
     btn_width = 200
     btn_height = 100
@@ -262,6 +268,7 @@ def game_over():
                     quit_game()
 
         screen.fill((BLUE))
+        screen.blit(game_over_message, game_over_message_rect)
         pygame.draw.rect(screen, BLACK, play_again_btn)
         screen.blit(play_again_text_obj, play_again_text_rect)
         pygame.draw.rect(screen, BLACK, quit_btn)
