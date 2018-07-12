@@ -30,26 +30,6 @@ cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
 font = pygame.font.Font('freesansbold.ttf', 20)
 message_font = pygame.font.Font('freesansbold.ttf', 40)
 
-LEVELS = {
-            1:{'cookie_drop_rate': 50,
-               'min_drop_speed': 1,
-               'max_drop_speed': 6,
-               'new_item_load_rate': 10,
-               'next_level_score': 10},
-
-            2:{'cookie_drop_rate': 40,
-               'min_drop_speed': 3,
-               'max_drop_speed': 12,
-               'new_item_load_rate': 6,
-               'next_level_score': 15},
-            
-            3:{'cookie_drop_rate': 30,
-               'min_drop_speed': 6,
-               'max_drop_speed': 14,
-               'new_item_load_rate': 4,
-               'next_level_score': 20}
-}
-
 
 class Falling_Object(object):
     def __init__(self, item_type, item_drop_speed):
@@ -88,38 +68,38 @@ class Player(object):
         self.rect = self.image.get_rect()
         self.rect.topleft = (SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)
         self.score = 0
+        self.top_score = 0
         self.lives = 5
-        self.level = 1
+        self.max_score = 20
 
-    def update_score(self, falling_item_hit):
-        self.play_sound_effect(falling_item_hit)
+    def hit_falling_object(self, falling_item_hit):
         if falling_item_hit.item_type == 'cookie':
-            self.score += 1
+            self.hit_cookie()
         else:
-            self.score = 0
-            self.decrease_lives()
-        self.update_game_level()
+            self.hit_bomb()
         
-    def play_sound_effect(self, falling_item_hit):
-        if falling_item_hit.item_type == 'cookie':
-            eat_cookie_sound.play()
-        else:
-            bomb_sound.play()
-
-    def decrease_lives(self):
+    def hit_cookie(self):
+        eat_cookie_sound.play()
+        self.score += 1
+        self.check_for_end_of_game()
+        
+    def hit_bomb(self):
+        bomb_sound.play()
+        self.set_top_score()
+        self.score = 0
         self.lives -= 1
-        if self.lives == 0:
-            game_over("GAME OVER")
+        self.check_for_end_of_game()
 
-    def update_game_level(self):
-        if self.score >=0 and self.score < LEVELS[1]['next_level_score']:
-            self.level = 1
-        if self.score >= LEVELS[1]['next_level_score'] and self.score < LEVELS[2]['next_level_score']:
-            self.level = 2
-        if self.score >= LEVELS[2]['next_level_score'] and self.score < LEVELS[3]['next_level_score']:
-            self.level = 3
-        if self.score >= LEVELS[3]['next_level_score']:
-            game_over("YOU WIN!!!")
+    def set_top_score(self):
+        if self.score > self.top_score:
+            self.top_score = self.score
+
+    def check_for_end_of_game(self):
+        if self.top_score >= self.max_score or self.score >= self.max_score:
+            game_over("YOU WIN!!!!")
+        if self.lives == 0:
+            game_over("GAME OVER!!")
+    
 
 def quit_game():
     pygame.quit()
@@ -176,14 +156,15 @@ def play_game():
     player = Player(cookie_monster_player_img)
     falling_objects = []
 
+    # Game Difficulty Settings
+    cookie_load_percent = 40
+    min_item_drop_speed = 2
+    max_item_drop_speed = 10
+    new_item_load_rate = 8
     new_item_load_counter = 0
-
-    level = 1
 
     done = False
     while not done:
-        # current_level = player.level
-        new_item_load_rate = LEVELS[player.level]['new_item_load_rate']
         new_item_load_counter += 1
 
         for event in pygame.event.get():
@@ -199,9 +180,9 @@ def play_game():
 
         if new_item_load_counter == new_item_load_rate:
             new_item_load_counter = 0
-            item_drop_speed = random.randint(LEVELS[player.level]['min_drop_speed'], LEVELS[player.level]['max_drop_speed'])
+            item_drop_speed = random.randint(min_item_drop_speed, max_item_drop_speed)
             item_type = 'bomb'
-            if random.randint(1, 100) <= LEVELS[player.level]['cookie_drop_rate']:
+            if random.randint(1, 100) <= cookie_load_percent:
                 item_type = 'cookie'
             falling_objects.append(Falling_Object(item_type, item_drop_speed))
 
@@ -211,7 +192,7 @@ def play_game():
                 falling_objects.remove(falling_object)
 
             if player.rect.colliderect(falling_object.image_rectangle()):
-                player.update_score(falling_object)
+                player.hit_falling_object(falling_object)
                 falling_objects.remove(falling_object)
 
         # move the mouse cursor to match the player
@@ -227,7 +208,7 @@ def play_game():
             item.render_image(screen)
         
         # Add score and top score to the screen.
-        add_score_text('Level: %s' % (player.level), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
+        add_score_text('Top Score: %s' % (player.top_score), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
         add_score_text('Score: %s' % (player.score), font, screen, SCREEN_WIDTH - 30, 70, BLUE)
         add_score_text('Lives: %s' % (player.lives), font, screen, SCREEN_WIDTH - 30, 120, BLUE)
 
