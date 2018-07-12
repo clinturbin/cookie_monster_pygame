@@ -31,7 +31,6 @@ falling_cookie_image = pygame.image.load('images/cookie.png').convert_alpha()
 falling_bomb_image = pygame.image.load('images/bomb.png').convert_alpha()
 
 
-font = pygame.font.Font('freesansbold.ttf', 20)
 message_font = pygame.font.Font('freesansbold.ttf', 40)
 
 
@@ -100,13 +99,29 @@ class Player(object):
 
     def check_for_end_of_game(self):
         if self.top_score >= self.max_score or self.score >= self.max_score:
-            pause(1)
-            game_over("YOU WIN!!!!")
+            self.end_game("YOU WIN!!!")
         if self.lives == 0:
-            pause(1)
-            game_over("GAME OVER!!")
+            self.end_game("GAME OVER!")
     
+    def end_game(self, message):
+        pygame.mixer.music.fadeout(1000)
+        pause(1)
+        game_over(message)
 
+class Score_Display(object):
+    def __init__(self, message, top_pos):
+        self.message = message
+        self.font = pygame.font.Font('freesansbold.ttf', 20)
+        self.color = BLUE
+        self.right_pos = SCREEN_WIDTH - 30
+        self.top_pos = top_pos
+
+    def Show_On_Screen(self):
+        msg_obj = self.font.render(self.message, 1, self.color)
+        msg_rect = msg_obj.get_rect()
+        msg_rect.topright = (self.right_pos, self.top_pos)
+        screen.blit(msg_obj, msg_rect)
+    
 def quit_game():
     bye_sound.play()
     pause(2)
@@ -118,12 +133,6 @@ def pause(seconds):
     while counter < (FPS * seconds):
         counter += 1
         game_clock.tick(FPS)
-
-def add_score_text(text, font, surface, x, y, color):
-    text_obj = font.render(text, 1, color)
-    text_rect = text_obj.get_rect()
-    text_rect.topright = (x, y)
-    surface.blit(text_obj, text_rect)     
 
 def load_screen():
     hello_sound.play()
@@ -169,9 +178,9 @@ def play_game():
 
     # Game Difficulty Settings
     cookie_load_percent = 40
-    min_item_drop_speed = 2
-    max_item_drop_speed = 10
-    new_item_load_rate = 8
+    min_item_drop_speed = 4
+    max_item_drop_speed = 12
+    new_item_load_rate = 7
     new_item_load_counter = 0
 
     done = False
@@ -219,9 +228,9 @@ def play_game():
             item.render_image(screen)
         
         # Add score and top score to the screen.
-        add_score_text('Top Score: %s' % (player.top_score), font, screen, SCREEN_WIDTH - 30, 20, BLUE)
-        add_score_text('Score: %s' % (player.score), font, screen, SCREEN_WIDTH - 30, 70, BLUE)
-        add_score_text('Lives: %s' % (player.lives), font, screen, SCREEN_WIDTH - 30, 120, BLUE)
+        Score_Display('Top Score: %s' % (player.top_score), 20).Show_On_Screen()
+        Score_Display('Score: %s' % (player.score), 70).Show_On_Screen()
+        Score_Display('Lives: %s' % (player.lives), 120).Show_On_Screen()
 
         pygame.display.update()
         game_clock.tick(FPS)
