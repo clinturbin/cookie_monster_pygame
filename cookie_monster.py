@@ -24,8 +24,12 @@ hello_sound = pygame.mixer.Sound('images/hello.wav')
 bye_sound = pygame.mixer.Sound('images/thank_you_bye.wav')
 pygame.mixer.music.load('images/c_is_for_cookie_3.wav')
 
+# Set up Images
 cookie_monster_player_img = pygame.image.load('images/cookie_monster.png').convert_alpha()
 cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
+falling_cookie_image = pygame.image.load('images/cookie.png').convert_alpha()
+falling_bomb_image = pygame.image.load('images/bomb.png').convert_alpha()
+
 
 font = pygame.font.Font('freesansbold.ttf', 20)
 message_font = pygame.font.Font('freesansbold.ttf', 40)
@@ -44,9 +48,9 @@ class Falling_Object(object):
 
     def get_image(self):
         if self.item_type == 'cookie':
-            return pygame.image.load('images/cookie.png').convert_alpha()
+            return falling_cookie_image
         elif self.item_type == 'bomb':
-            return pygame.image.load('images/bomb.png').convert_alpha()
+            return falling_bomb_image
 
     def transform_image_size(self):
         image = self.get_image()
@@ -70,7 +74,7 @@ class Player(object):
         self.score = 0
         self.top_score = 0
         self.lives = 5
-        self.max_score = 20
+        self.max_score = 15
 
     def hit_falling_object(self, falling_item_hit):
         if falling_item_hit.item_type == 'cookie':
@@ -96,14 +100,24 @@ class Player(object):
 
     def check_for_end_of_game(self):
         if self.top_score >= self.max_score or self.score >= self.max_score:
+            pause(1)
             game_over("YOU WIN!!!!")
         if self.lives == 0:
+            pause(1)
             game_over("GAME OVER!!")
     
 
 def quit_game():
+    bye_sound.play()
+    pause(2)
     pygame.quit()
-    sys.exit()    
+    sys.exit()
+
+def pause(seconds):
+    counter = 0
+    while counter < (FPS * seconds):
+        counter += 1
+        game_clock.tick(FPS)
 
 def add_score_text(text, font, surface, x, y, color):
     text_obj = font.render(text, 1, color)
@@ -136,10 +150,7 @@ def load_screen():
                 x, y = event.pos
                 if button.collidepoint(x, y):
                     start_game_sound.play()
-                    sound_delay_counter = 0
-                    while sound_delay_counter < (FPS * 2):
-                        sound_delay_counter += 1
-                        game_clock.tick(60)
+                    pause(2)
                     done = True
 
         screen.fill((BLACK))
@@ -250,11 +261,6 @@ def game_over(message):
                 if play_again_btn.collidepoint(x, y):
                     play_game()
                 if quit_btn.collidepoint(x, y):
-                    bye_sound.play()
-                    sound_delay_counter = 0
-                    while sound_delay_counter < (FPS * 2):
-                        sound_delay_counter += 1
-                        game_clock.tick(60)
                     quit_game()
 
         screen.fill((BLUE))
