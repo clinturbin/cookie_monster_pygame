@@ -30,7 +30,7 @@ cookie_monster_start_img = pygame.image.load('images/cm1.png').convert_alpha()
 falling_cookie_image = pygame.image.load('images/cookie.png').convert_alpha()
 falling_bomb_image = pygame.image.load('images/bomb.png').convert_alpha()
 
-
+font = pygame.font.Font('freesansbold.ttf', 20)
 message_font = pygame.font.Font('freesansbold.ttf', 40)
 
 
@@ -111,13 +111,12 @@ class Player(object):
 class Score_Display(object):
     def __init__(self, message, top_pos):
         self.message = message
-        self.font = pygame.font.Font('freesansbold.ttf', 20)
         self.color = BLUE
         self.right_pos = SCREEN_WIDTH - 30
         self.top_pos = top_pos
 
     def Show_On_Screen(self):
-        msg_obj = self.font.render(self.message, 1, self.color)
+        msg_obj = font.render(self.message, 1, self.color)
         msg_rect = msg_obj.get_rect()
         msg_rect.topright = (self.right_pos, self.top_pos)
         screen.blit(msg_obj, msg_rect)
