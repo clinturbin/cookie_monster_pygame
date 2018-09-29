@@ -1,8 +1,8 @@
 import pygame, sys, random
 from pygame.locals import *
 
-SCREEN_WIDTH = 900
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 1080
+SCREEN_HEIGHT = 760
 
 # Set up colors
 BLACK = (0, 0, 0)
